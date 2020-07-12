@@ -2,12 +2,13 @@
 #include "StringHelpers.h"
 #include "Game.h"
 #include "EntityManager.h"
+#include <iostream>
 
 const float Game::PlayerSpeed = 100.f;
 const sf::Time Game::TimePerFrame = sf::seconds(1.f / 60.f);
 
 Game::Game()
-	: mWindow(sf::VideoMode(840, 600), "Space Invaders 1978", sf::Style::Close)
+	: mWindow(sf::VideoMode(840, 600), "Zaxxon 2000", sf::Style::Close)
 	, mTexture()
 	, mPlayer()
 	, mFont()
@@ -20,14 +21,14 @@ Game::Game()
 	, mIsMovingLeft(false)
 {
 	mWindow.setFramerateLimit(160);
-
-	_TextureWeapon.loadFromFile("Media/Textures/SI_WeaponGreen.png");
-	_TextureWeaponEnemy.loadFromFile("Media/Textures/SI_WeaponYellow.png");
-	_TextureWeaponEnemyMaster.loadFromFile("Media/Textures/SI_WeaponRed.png");
-	mTexture.loadFromFile("Media/Textures/SI_Player.png");
-	_TextureEnemyMaster.loadFromFile("Media/Textures/SI_EnemyMaster.png");
-	_TextureEnemy.loadFromFile("Media/Textures/SI_Enemy.png");
-	_TextureBlock.loadFromFile("Media/Textures/SI_Block.png");
+	
+	//_TextureWeapon.loadFromFile("Media/Textures/SI_WeaponGreen.png");
+	//_TextureWeaponEnemy.loadFromFile("Media/Textures/SI_WeaponYellow.png");
+	_TextureBlock.loadFromFile("Media/Textures/background.png");
+	mTexture.loadFromFile("Media/Textures/Eagle.png");
+	//_TextureEnemyMaster.loadFromFile("Media/Textures/SI_EnemyMaster.png");
+	//_TextureEnemy.loadFromFile("Media/Textures/SI_Enemy.png");
+	//_TextureBlock.loadFromFile("Media/Textures/SI_Block.png");
 	mFont.loadFromFile("Media/Sansation.ttf");
 
 	InitSprites();
@@ -56,6 +57,20 @@ void Game::InitSprites()
 	_IsEnemyMasterWeaponFired = false;
 
 	//
+	// Background
+	//
+
+	std::shared_ptr<Entity> background = std::make_shared<Entity>();
+	sf::Sprite background_sprite;
+	background_sprite.setTexture(_TextureBlock);
+	sf::Vector2f scale = background_sprite.getScale();
+	background_sprite.setScale(scale.x * 3, scale.y*2);
+	background->m_sprite = background_sprite;
+	background->m_type = EntityType::block;
+	background->m_position = mPlayer.getPosition();
+	EntityManager::m_Entities.push_back(background);
+
+	//
 	// Player
 	//
 
@@ -68,55 +83,26 @@ void Game::InitSprites()
 	player->m_position = mPlayer.getPosition();
 	EntityManager::m_Entities.push_back(player);
 
-	//
-	// Enemy Master
-	//
+	////
+	//// Enemies
+	////
 
-	_EnemyMaster.setTexture(_TextureEnemyMaster);
-	_EnemyMaster.setPosition(100.f + 50.f, 1.f);
-	std::shared_ptr<Entity> sem = std::make_shared<Entity>();
-	sem->m_sprite = _EnemyMaster;
-	sem->m_type = EntityType::enemyMaster;
-	sem->m_size = _TextureEnemyMaster.getSize();
-	sem->m_position = _EnemyMaster.getPosition();
-	EntityManager::m_Entities.push_back(sem);
+	//for (int i = 0; i < SPRITE_COUNT_X; i++)
+	//{
+	//	for (int j = 0; j < SPRITE_COUNT_Y; j++)
+	//	{
+	//		_Enemy[i][j].setTexture(_TextureEnemy);
+	//		_Enemy[i][j].setPosition(100.f + 50.f * (i + 1), 10.f + 50.f * (j + 1));
 
-	//
-	// Enemies
-	//
+	//		std::shared_ptr<Entity> se = std::make_shared<Entity>();
+	//		se->m_sprite = _Enemy[i][j];
+	//		se->m_type = EntityType::enemy;
+	//		se->m_size = _TextureEnemy.getSize();
+	//		se->m_position = _Enemy[i][j].getPosition();
+	//		EntityManager::m_Entities.push_back(se);
+	//	}
+	//}
 
-	for (int i = 0; i < SPRITE_COUNT_X; i++)
-	{
-		for (int j = 0; j < SPRITE_COUNT_Y; j++)
-		{
-			_Enemy[i][j].setTexture(_TextureEnemy);
-			_Enemy[i][j].setPosition(100.f + 50.f * (i + 1), 10.f + 50.f * (j + 1));
-
-			std::shared_ptr<Entity> se = std::make_shared<Entity>();
-			se->m_sprite = _Enemy[i][j];
-			se->m_type = EntityType::enemy;
-			se->m_size = _TextureEnemy.getSize();
-			se->m_position = _Enemy[i][j].getPosition();
-			EntityManager::m_Entities.push_back(se);
-		}
-	}
-
-	//
-	// Blocks
-	//
-
-	for (int i = 0; i < BLOCK_COUNT; i++)
-	{
-		_Block[i].setTexture(_TextureBlock);
-		_Block[i].setPosition(0.f + 150.f * (i + 1), 10 + 350.f);
-
-		std::shared_ptr<Entity> sb = std::make_shared<Entity>();
-		sb->m_sprite = _Block[i];
-		sb->m_type = EntityType::block;
-		sb->m_size = _TextureBlock.getSize();
-		sb->m_position = _Block[i].getPosition();
-		EntityManager::m_Entities.push_back(sb);
-	}
 
 	mStatisticsText.setFont(mFont);
 	mStatisticsText.setPosition(5.f, 5.f);
@@ -224,7 +210,6 @@ void Game::render()
 		{
 			continue;
 		}
-
 		mWindow.draw(entity->m_sprite);
 	}
 
@@ -354,33 +339,33 @@ void Game::HanldeEnemyMasterWeaponMoves()
 
 void Game::HandleEnemyMasterWeaponFiring()
 {
-	if (_IsEnemyMasterWeaponFired == true)
+	/*if (_IsEnemyMasterWeaponFired == true)
 		return;
 
 	if (EntityManager::GetEnemyMaster()->m_enabled == false)
-		return;
+		return;*/
 
 	// a little random...
 	int r = rand() % 50;
 	if (r != 10)
 		return;
 
-	float x, y;
-	x = EntityManager::GetEnemyMaster()->m_sprite.getPosition().x;
-	y = EntityManager::GetEnemyMaster()->m_sprite.getPosition().y;
-	y--;
+	////float x, y;
+	////x = EntityManager::GetEnemyMaster()->m_sprite.getPosition().x;
+	////y = EntityManager::GetEnemyMaster()->m_sprite.getPosition().y;
+	////y--;
 
-	std::shared_ptr<Entity> sw = std::make_shared<Entity>();
-	sw->m_sprite.setTexture(_TextureWeaponEnemyMaster);
+	//std::shared_ptr<Entity> sw = std::make_shared<Entity>();
+	//sw->m_sprite.setTexture(_TextureWeaponEnemyMaster);
 
-	sw->m_sprite.setPosition(
-		x + _TextureEnemyMaster.getSize().x / 2,
-		y + _TextureEnemyMaster.getSize().y);
-	sw->m_type = EntityType::enemyMasterWeapon;
-	sw->m_size = _TextureWeaponEnemyMaster.getSize();
-	EntityManager::m_Entities.push_back(sw);
+	//sw->m_sprite.setPosition(
+	//	x + _TextureEnemyMaster.getSize().x / 2,
+	//	y + _TextureEnemyMaster.getSize().y);
+	//sw->m_type = EntityType::enemyMasterWeapon;
+	//sw->m_size = _TextureWeaponEnemyMaster.getSize();
+	//EntityManager::m_Entities.push_back(sw);
 
-	_IsEnemyMasterWeaponFired = true;
+	//_IsEnemyMasterWeaponFired = true;
 }
 
 void Game::HandleCollisionEnemyMasterWeaponBlock()
@@ -908,7 +893,7 @@ void Game::HandleCollisionWeaponEnemyMaster()
 	}
 
 end:
-	//nop
+	//nop 
 	return;
 }
 
@@ -933,7 +918,7 @@ void Game::HandleGameOver()
 		DisplayGameOver();
 	}
 
-	if (EntityManager::GetPlayer()->m_enabled == false)
+ 	if (EntityManager::GetPlayer()->m_enabled == false)
 	{
 		DisplayGameOver();
 	}
