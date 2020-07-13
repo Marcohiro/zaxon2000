@@ -21,10 +21,11 @@ Game::Game()
 	, mIsMovingLeft(false)
 {
 	mWindow.setFramerateLimit(160);
-	
+
 	//_TextureWeapon.loadFromFile("Media/Textures/SI_WeaponGreen.png");
 	//_TextureWeaponEnemy.loadFromFile("Media/Textures/SI_WeaponYellow.png");
 	_TextureBlock.loadFromFile("Media/Textures/background.png");
+	_TextureWall.loadFromFile("Media/Textures/wall.jpg");
 	mTexture.loadFromFile("Media/Textures/Eagle.png");
 	//_TextureEnemyMaster.loadFromFile("Media/Textures/SI_EnemyMaster.png");
 	//_TextureEnemy.loadFromFile("Media/Textures/SI_Enemy.png");
@@ -51,6 +52,7 @@ void Game::InitSprites()
 {
 	_lives = 3;
 	_score = 0;
+	_distance = 0;
 	_IsGameOver = false;
 	_IsEnemyWeaponFired = false;
 	_IsPlayerWeaponFired = false;
@@ -64,7 +66,7 @@ void Game::InitSprites()
 	sf::Sprite background_sprite;
 	background_sprite.setTexture(_TextureBlock);
 	sf::Vector2f scale = background_sprite.getScale();
-	background_sprite.setScale(scale.x * 3, scale.y*2);
+	background_sprite.setScale(scale.x * 3, scale.y * 2);
 	background->m_sprite = background_sprite;
 	background->m_type = EntityType::block;
 	background->m_position = mPlayer.getPosition();
@@ -103,6 +105,26 @@ void Game::InitSprites()
 	//	}
 	//}
 
+	//
+	// Wall
+	//
+
+	for (int i = 0; i < SPRITE_COUNT_X; i++)
+	{
+		for (int j = 0; j < SPRITE_COUNT_Y; j++)
+		{
+			_Wall[i][j].setTexture(_TextureWall);
+			_Wall[i][j].setPosition(100.f + 50.f * (i + 1), 10.f + 50.f * (j + 1));
+
+			std::shared_ptr<Entity> se = std::make_shared<Entity>();
+			se->m_sprite = _Wall[i][j];
+			se->m_type = EntityType::wall;
+			se->m_size = _TextureWall.getSize();
+			se->m_position = _Wall[i][j].getPosition();
+			EntityManager::m_Entities.push_back(se);
+		}
+	}
+
 
 	mStatisticsText.setFont(mFont);
 	mStatisticsText.setPosition(5.f, 5.f);
@@ -127,6 +149,16 @@ void Game::InitSprites()
 	_ScoreText.setPosition(10.f, 100.f);
 	_ScoreText.setCharacterSize(20);
 	_ScoreText.setString(std::to_string(_score));
+
+	//
+	// Distance
+	//
+
+	_DistanceText.setFillColor(sf::Color::Green);
+	_DistanceText.setFont(mFont);
+	_DistanceText.setPosition(10.f, 150.f);
+	_DistanceText.setCharacterSize(20);
+	_DistanceText.setString(std::to_string(_distance));
 }
 
 void Game::run()
@@ -174,7 +206,9 @@ void Game::processEvents()
 
 void Game::update(sf::Time elapsedTime)
 {
-	sf::Vector2f movement(0.f, 0.f);
+	//Automatic movement going up !
+	sf::Vector2f movement(0.f, 20.f);
+	_distance++;
 	if (mIsMovingUp)
 		movement.y -= PlayerSpeed;
 	if (mIsMovingDown)
@@ -217,6 +251,7 @@ void Game::render()
 	mWindow.draw(mText);
 	mWindow.draw(_LivesText);
 	mWindow.draw(_ScoreText);
+	mWindow.draw(_DistanceText);
 	mWindow.display();
 }
 
@@ -270,6 +305,9 @@ void Game::HandleTexts()
 	_LivesText.setString(lives);
 	std::string score = "Score: " + std::to_string(_score);
 	_ScoreText.setString(score);
+	//Traveled distance
+	std::string distant = "Distance " + std::to_string(_distance);
+	_DistanceText.setString(distant);
 	return;
 }
 
@@ -282,10 +320,10 @@ void Game::HandleCollisionEnemyMasterWeaponPlayer()
 			continue;
 		}
 
-		if (weapon->m_type != EntityType::enemyMasterWeapon)
-		{
-			continue;
-		}
+		/*	if (weapon->m_type != EntityType::enemyMasterWeapon)
+			{
+				continue;
+			}*/
 
 		sf::FloatRect boundWeapon;
 		boundWeapon = weapon->m_sprite.getGlobalBounds();
@@ -296,7 +334,7 @@ void Game::HandleCollisionEnemyMasterWeaponPlayer()
 		if (boundWeapon.intersects(boundPlayer) == true)
 		{
 			weapon->m_enabled = false;
-			_IsEnemyMasterWeaponFired = false; 
+			_IsEnemyMasterWeaponFired = false;
 			_lives--;
 			//break;
 			goto end;
@@ -317,10 +355,10 @@ void Game::HanldeEnemyMasterWeaponMoves()
 			continue;
 		}
 
-		if (entity->m_type != EntityType::enemyMasterWeapon)
-		{
-			continue;
-		}
+		/*	if (entity->m_type != EntityType::enemyMasterWeapon)
+			{
+				continue;
+			}*/
 
 		float x, y;
 		x = entity->m_sprite.getPosition().x;
@@ -345,7 +383,7 @@ void Game::HandleEnemyMasterWeaponFiring()
 	if (EntityManager::GetEnemyMaster()->m_enabled == false)
 		return;*/
 
-	// a little random...
+		// a little random...
 	int r = rand() % 50;
 	if (r != 10)
 		return;
@@ -377,10 +415,10 @@ void Game::HandleCollisionEnemyMasterWeaponBlock()
 			continue;
 		}
 
-		if (weapon->m_type != EntityType::enemyMasterWeapon)
-		{
-			continue;
-		}
+		//if (weapon->m_type != EntityType::enemyMasterWeapon)
+		//{
+		//	continue;
+		//}
 
 		for (std::shared_ptr<Entity> block : EntityManager::m_Entities)
 		{
@@ -424,10 +462,10 @@ void Game::HandleEnemyMasterMove()
 			continue;
 		}
 
-		if (entity->m_type != EntityType::enemyMaster)
-		{
-			continue;
-		}
+		//if (entity->m_type != EntityType::enemyMaster)
+		//{
+		//	continue;
+		//}
 
 		float x, y;
 		x = entity->m_sprite.getPosition().x;
@@ -864,10 +902,10 @@ void Game::HandleCollisionWeaponEnemyMaster()
 
 		for (std::shared_ptr<Entity> enemy : EntityManager::m_Entities)
 		{
-			if (enemy->m_type != EntityType::enemyMaster)
-			{
-				continue;
-			}
+			/*		if (enemy->m_type != EntityType::enemyMaster)
+					{
+						continue;
+					}*/
 
 			if (enemy->m_enabled == false)
 			{
@@ -901,7 +939,7 @@ void Game::HandleGameOver()
 {
 	// Game Over ?
 	int count = std::count_if(EntityManager::m_Entities.begin(), EntityManager::m_Entities.end(), [](std::shared_ptr<Entity> element) {
-		if (element->m_type == EntityType::enemy || element->m_type == EntityType::enemyMaster)
+		if (element->m_type == EntityType::enemy)
 		{
 			if (element->m_enabled == false)
 			{
@@ -909,16 +947,14 @@ void Game::HandleGameOver()
 			}
 		}
 		return false;
-	});
+		});
 
-	// sprite counts + enemy master
-	//if (count >= (5))
 	if (count == ((SPRITE_COUNT_X * SPRITE_COUNT_Y) + 1))
 	{
 		DisplayGameOver();
 	}
 
- 	if (EntityManager::GetPlayer()->m_enabled == false)
+	if (EntityManager::GetPlayer()->m_enabled == false)
 	{
 		DisplayGameOver();
 	}

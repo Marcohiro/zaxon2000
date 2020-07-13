@@ -56,6 +56,10 @@ private:
 	int _lives = 3;
 	sf::Text	_ScoreText;
 	int _score = 0;
+	//Added distance
+	sf::Text _DistanceText;
+	int _distance = 0;
+
 
 	std::size_t	mStatisticsNumFrames;
 	bool mIsMovingUp;
@@ -76,7 +80,7 @@ private:
 	sf::Texture	_TextureWeaponEnemy;
 	sf::Texture	_TextureWeaponEnemyMaster;
 	sf::Sprite	_Weapon;
-	sf::Texture	_TextureEnemyMaster;
-	sf::Sprite	_EnemyMaster;
+	sf::Texture	_TextureWall;
+	sf::Sprite	_Wall[SPRITE_COUNT_X][SPRITE_COUNT_Y];
 };
 
